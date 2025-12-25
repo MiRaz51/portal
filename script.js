@@ -74,6 +74,10 @@ async function loadProjects(githubUser) {
 
       const description = repo.description || 'Sin descripción.';
 
+      const starsHtml = repo.stargazers_count > 0
+        ? `<span>⭐ ${repo.stargazers_count}</span>`
+        : '';
+
       card.innerHTML = `
         <div class="card-preview">
           <iframe
@@ -88,7 +92,7 @@ async function loadProjects(githubUser) {
           <p>${description}</p>
         </div>
         <div class="card-footer">
-          <span>⭐ ${repo.stargazers_count}</span>
+          ${starsHtml}
           <a
             class="button open-project"
             href="${repo.deployUrl}"
@@ -115,6 +119,7 @@ function initUserControl() {
   const linkGithub = document.getElementById('link-github');
   const linkVercel = document.getElementById('link-vercel');
   const linkZeabur = document.getElementById('link-zeabur');
+  const linkLocal = document.getElementById('link-local');
 
   const savedUser = localStorage.getItem(USER_STORAGE_KEY) || 'MiRaz51';
   if (input) {
@@ -125,6 +130,10 @@ function initUserControl() {
     if (linkGithub) linkGithub.href = `https://github.com/${user}`;
     if (linkVercel) linkVercel.href = 'https://vercel.com';
     if (linkZeabur) linkZeabur.href = 'https://zeabur.com';
+    if (linkLocal) {
+      const host = window.location.hostname || 'localhost';
+      linkLocal.href = `http://${host}:8000/`;
+    }
   };
 
   applyProfileLinks(savedUser);
