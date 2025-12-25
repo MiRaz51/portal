@@ -1,4 +1,22 @@
 const USER_STORAGE_KEY = 'github_user';
+const USAGE_STORAGE_KEY = 'project_usage';
+
+function getUsageMap() {
+  try {
+    const raw = localStorage.getItem(USAGE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveUsageMap(map) {
+  try {
+    localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(map));
+  } catch (e) {
+    // ignorar errores de almacenamiento
+  }
+}
 
 async function loadProjects(githubUser) {
   const container = document.getElementById('projects-container');
@@ -20,19 +38,28 @@ async function loadProjects(githubUser) {
 
     const repos = await res.json();
 
+    const usageMap = getUsageMap();
+
     // Usar únicamente el campo homepage como URL de despliegue
     const projects = repos
       .map(repo => {
         const hasHomepage = repo.homepage && repo.homepage.trim() !== '';
         const deployUrl = hasHomepage ? repo.homepage.trim() : null;
-        return { ...repo, deployUrl };
+        const key = repo.full_name || repo.name;
+        const usageCount = usageMap[key] || 0;
+        return { ...repo, deployUrl, usageCount, usageKey: key };
       })
       // Mantener solo los que realmente tienen una URL de despliegue (homepage)
       .filter(repo => repo.deployUrl)
       // opcional: ocultar forks
       .filter(repo => !repo.fork)
-      // opcional: ordenar por fecha de actualización
-      .sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at));
+      // ordenar: primero por uso (desc), luego por fecha de actualización
+      .sort((a, b) => {
+        if (b.usageCount !== a.usageCount) {
+          return b.usageCount - a.usageCount;
+        }
+        return new Date(b.pushed_at) - new Date(a.pushed_at);
+      });
 
     if (projects.length === 0) {
       container.innerHTML = '<p>No hay proyectos con publicación configurada en el campo "Homepage" de GitHub para este usuario.</p>';
@@ -63,10 +90,11 @@ async function loadProjects(githubUser) {
         <div class="card-footer">
           <span>⭐ ${repo.stargazers_count}</span>
           <a
-            class="button"
+            class="button open-project"
             href="${repo.deployUrl}"
             target="_blank"
             rel="noopener noreferrer"
+            data-usage-key="${repo.usageKey}"
           >
             Abrir proyecto
           </a>
@@ -130,3 +158,19 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+
+// Registrar uso cuando se hace clic en "Abrir proyecto"
+document.addEventListener('click', (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+
+  const link = target.closest('a.open-project');
+  if (!link) return;
+
+  const usageKey = link.getAttribute('data-usage-key');
+  if (!usageKey) return;
+
+  const usageMap = getUsageMap();
+  usageMap[usageKey] = (usageMap[usageKey] || 0) + 1;
+  saveUsageMap(usageMap);
+});
