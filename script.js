@@ -1,11 +1,19 @@
-const GITHUB_USER = 'MiRaz51';
-const API_URL = `https://api.github.com/users/${GITHUB_USER}/repos`;
+const USER_STORAGE_KEY = 'github_user';
 
-async function loadProjects() {
+async function loadProjects(githubUser) {
   const container = document.getElementById('projects-container');
 
+  if (!githubUser) {
+    container.innerHTML = '<p>Ingresa un usuario de GitHub para ver sus proyectos.</p>';
+    return;
+  }
+
+  const apiUrl = `https://api.github.com/users/${githubUser}/repos`;
+
   try {
-    const res = await fetch(API_URL);
+    container.innerHTML = '<p>Cargando proyectos...</p>';
+
+    const res = await fetch(apiUrl);
     if (!res.ok) {
       throw new Error('No se pudieron cargar los repositorios');
     }
@@ -27,9 +35,11 @@ async function loadProjects() {
       .sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at));
 
     if (projects.length === 0) {
-      container.innerHTML = '<p>No hay proyectos con publicación configurada en el campo "Homepage" de GitHub.</p>';
+      container.innerHTML = '<p>No hay proyectos con publicación configurada en el campo "Homepage" de GitHub para este usuario.</p>';
       return;
     }
+
+    container.innerHTML = '';
 
     projects.forEach(repo => {
       const card = document.createElement('div');
@@ -71,4 +81,44 @@ async function loadProjects() {
   }
 }
 
-loadProjects();
+function initUserControl() {
+  const input = document.getElementById('github-user-input');
+  const button = document.getElementById('github-user-button');
+  const linkGithub = document.getElementById('link-github');
+  const linkVercel = document.getElementById('link-vercel');
+  const linkZeabur = document.getElementById('link-zeabur');
+
+  const savedUser = localStorage.getItem(USER_STORAGE_KEY) || 'MiRaz51';
+  if (input) {
+    input.value = savedUser;
+  }
+
+  const applyProfileLinks = (user) => {
+    if (linkGithub) linkGithub.href = `https://github.com/${user}`;
+    if (linkVercel) linkVercel.href = 'https://vercel.com';
+    if (linkZeabur) linkZeabur.href = 'https://zeabur.com';
+  };
+
+  applyProfileLinks(savedUser);
+  loadProjects(savedUser);
+
+  if (button && input) {
+    const triggerLoad = () => {
+      const value = input.value.trim();
+      if (!value) return;
+      localStorage.setItem(USER_STORAGE_KEY, value);
+      applyProfileLinks(value);
+      loadProjects(value);
+    };
+
+    button.addEventListener('click', triggerLoad);
+    input.addEventListener('keyup', (event) => {
+      if (event.key === 'Enter') {
+        triggerLoad();
+      }
+    });
+  }
+}
+
+// Como el script está al final del body, podemos inicializar directamente
+initUserControl();
