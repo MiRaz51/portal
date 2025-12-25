@@ -122,3 +122,11 @@ function initUserControl() {
 
 // Como el script está al final del body, podemos inicializar directamente
 initUserControl();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch((error) => {
+      console.error('Error al registrar el service worker:', error);
+    });
+  });
+}
