@@ -37,15 +37,6 @@ async function loadProjects() {
 
       const description = repo.description || 'Sin descripción.';
 
-      // Detectar proveedor según la URL de despliegue
-      const url = repo.deployUrl.toLowerCase();
-      let providerLabel = 'Ver sitio';
-      if (url.includes('vercel.app')) {
-        providerLabel = 'Ver en Vercel';
-      } else if (url.includes('zeabur.app')) {
-        providerLabel = 'Ver en Zeabur';
-      }
-
       card.innerHTML = `
         <div class="card-preview">
           <iframe
@@ -60,27 +51,15 @@ async function loadProjects() {
           <p>${description}</p>
         </div>
         <div class="card-footer">
-          <div class="card-meta">
-            <span>⭐ ${repo.stargazers_count}</span>
-          </div>
-          <div class="card-actions">
-            <a
-              class="button button-secondary"
-              href="${repo.html_url}"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GitHub
-            </a>
-            <a
-              class="button"
-              href="${repo.deployUrl}"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              ${providerLabel}
-            </a>
-          </div>
+          <span>⭐ ${repo.stargazers_count}</span>
+          <a
+            class="button"
+            href="${repo.deployUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Abrir proyecto
+          </a>
         </div>
       `;
 
