@@ -12,21 +12,14 @@ async function loadProjects() {
 
     const repos = await res.json();
 
-    // Construir una URL de despliegue a partir de homepage o GitHub Pages
+    // Usar únicamente el campo homepage como URL de despliegue
     const projects = repos
       .map(repo => {
-        let deployUrl = null;
-
-        if (repo.homepage && repo.homepage.trim() !== '') {
-          deployUrl = repo.homepage.trim();
-        } else if (repo.has_pages) {
-          // URL estándar de GitHub Pages para repos de usuario
-          deployUrl = `https://${GITHUB_USER}.github.io/${repo.name}/`;
-        }
-
+        const hasHomepage = repo.homepage && repo.homepage.trim() !== '';
+        const deployUrl = hasHomepage ? repo.homepage.trim() : null;
         return { ...repo, deployUrl };
       })
-      // Mantener solo los que realmente tienen una URL de despliegue
+      // Mantener solo los que realmente tienen una URL de despliegue (homepage)
       .filter(repo => repo.deployUrl)
       // opcional: ocultar forks
       .filter(repo => !repo.fork)
@@ -34,7 +27,7 @@ async function loadProjects() {
       .sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at));
 
     if (projects.length === 0) {
-      container.innerHTML = '<p>No hay proyectos con publicación configurada (homepage o GitHub Pages).</p>';
+      container.innerHTML = '<p>No hay proyectos con publicación configurada en el campo "Homepage" de GitHub.</p>';
       return;
     }
 
@@ -44,12 +37,22 @@ async function loadProjects() {
 
       const description = repo.description || 'Sin descripción.';
 
+      // Detectar proveedor según la URL de despliegue
+      const url = repo.deployUrl.toLowerCase();
+      let providerLabel = 'Ver sitio';
+      if (url.includes('vercel.app')) {
+        providerLabel = 'Ver en Vercel';
+      } else if (url.includes('zeabur.app')) {
+        providerLabel = 'Ver en Zeabur';
+      }
+
       card.innerHTML = `
         <div class="card-preview">
           <iframe
             src="${repo.deployUrl}"
             loading="lazy"
             referrerpolicy="no-referrer"
+            sandbox="allow-same-origin allow-forms allow-pointer-lock allow-popups"
           ></iframe>
         </div>
         <div class="card-content">
@@ -57,15 +60,27 @@ async function loadProjects() {
           <p>${description}</p>
         </div>
         <div class="card-footer">
-          <span>⭐ ${repo.stargazers_count}</span>
-          <a
-            class="button"
-            href="${repo.deployUrl}"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Abrir proyecto
-          </a>
+          <div class="card-meta">
+            <span>⭐ ${repo.stargazers_count}</span>
+          </div>
+          <div class="card-actions">
+            <a
+              class="button button-secondary"
+              href="${repo.html_url}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GitHub
+            </a>
+            <a
+              class="button"
+              href="${repo.deployUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              ${providerLabel}
+            </a>
+          </div>
         </div>
       `;
 
