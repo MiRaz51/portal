@@ -6,7 +6,7 @@
     </linearGradient>
   </defs>
   <rect width="192" height="192" rx="40" fill="url(#bg)" />
-  <text x="50%" y="54%" text-anchor="middle" fill="#ffffff" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="64" font-weight="700">
+  <text x="50%" y="53%" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="120" font-weight="700">
     P
   </text>
 </svg>
