@@ -18,6 +18,36 @@ function saveUsageMap(map) {
   }
 }
 
+async function copyTextToClipboard(text) {
+  if (!text) return false;
+
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) {
+    // continuar con fallback
+  }
+
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.top = '-9999px';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    const ok = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return ok;
+  } catch (e) {
+    return false;
+  }
+}
+
 async function loadProjects(githubUser) {
   const container = document.getElementById('projects-container');
 
@@ -78,6 +108,8 @@ async function loadProjects(githubUser) {
         ? `<span>⭐ ${repo.stargazers_count}</span>`
         : '';
 
+      const githubUrl = repo.html_url || `https://github.com/${repo.full_name || repo.name}`;
+
       card.innerHTML = `
         <div class="card-preview">
           <iframe
@@ -93,15 +125,32 @@ async function loadProjects(githubUser) {
         </div>
         <div class="card-footer">
           ${starsHtml}
-          <a
-            class="button open-project"
-            href="${repo.deployUrl}"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-usage-key="${repo.usageKey}"
-          >
-            Abrir proyecto
-          </a>
+          <div class="card-footer-actions">
+            <button
+              class="button secondary copy-link"
+              type="button"
+              data-copy-url="${repo.deployUrl}"
+            >
+              Copiar link
+            </button>
+            <a
+              class="button secondary"
+              href="${githubUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GitHub
+            </a>
+            <a
+              class="button open-project"
+              href="${repo.deployUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-usage-key="${repo.usageKey}"
+            >
+              Abrir proyecto
+            </a>
+          </div>
         </div>
       `;
 
@@ -172,6 +221,21 @@ if ('serviceWorker' in navigator) {
 document.addEventListener('click', (event) => {
   const target = event.target;
   if (!(target instanceof HTMLElement)) return;
+
+  const copyButton = target.closest('button.copy-link');
+  if (copyButton instanceof HTMLButtonElement) {
+    const url = copyButton.getAttribute('data-copy-url') || '';
+    const originalText = copyButton.textContent || 'Copiar link';
+    copyButton.disabled = true;
+    copyTextToClipboard(url).then((ok) => {
+      copyButton.textContent = ok ? 'Copiado' : 'No se pudo copiar';
+      window.setTimeout(() => {
+        copyButton.textContent = originalText;
+        copyButton.disabled = false;
+      }, 1200);
+    });
+    return;
+  }
 
   const link = target.closest('a.open-project');
   if (!link) return;
