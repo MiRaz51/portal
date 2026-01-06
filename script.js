@@ -1,7 +1,9 @@
 const USER_STORAGE_KEY = 'github_user';
 const USAGE_STORAGE_KEY = 'project_usage';
+const PORT_STORAGE_KEY = 'local_port';
 
 function getUsageMap() {
+  // ... (rest of the functions remain same until initUserControl)
   try {
     const raw = localStorage.getItem(USAGE_STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
@@ -170,38 +172,84 @@ function initUserControl() {
   const linkZeabur = document.getElementById('link-zeabur');
   const linkLocal = document.getElementById('link-local');
 
+  // Modal elements
+  const portModal = document.getElementById('port-modal');
+  const modalPortInput = document.getElementById('modal-port-input');
+  const modalClose = document.getElementById('modal-close');
+  const modalCancel = document.getElementById('modal-cancel');
+  const modalSubmit = document.getElementById('modal-submit');
+
   const savedUser = localStorage.getItem(USER_STORAGE_KEY) || 'MiRaz51';
-  if (input) {
-    input.value = savedUser;
-  }
+  const savedPort = localStorage.getItem(PORT_STORAGE_KEY) || '8000';
+
+  if (input) input.value = savedUser;
+  if (modalPortInput) modalPortInput.value = savedPort;
+
+  const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
+  const getLocalUrl = (port) => {
+    const host = isMobile() ? window.location.hostname : 'localhost';
+    return `http://${host}:${port}/`;
+  };
 
   const applyProfileLinks = (user) => {
     if (linkGithub) linkGithub.href = `https://github.com/${user}`;
     if (linkVercel) linkVercel.href = 'https://vercel.com';
     if (linkZeabur) linkZeabur.href = 'https://zeabur.com';
-    if (linkLocal) {
-      const host = window.location.hostname || 'localhost';
-      linkLocal.href = `http://${host}:8000/`;
-    }
   };
 
   applyProfileLinks(savedUser);
   loadProjects(savedUser);
 
+  // Modal logic
+  const openModal = () => {
+    if (portModal) portModal.style.display = 'flex';
+  };
+
+  const closeModal = () => {
+    if (portModal) portModal.style.display = 'none';
+  };
+
+  if (linkLocal) {
+    linkLocal.addEventListener('click', (e) => {
+      e.preventDefault();
+      openModal();
+    });
+  }
+
+  if (modalClose) modalClose.addEventListener('click', closeModal);
+  if (modalCancel) modalCancel.addEventListener('click', closeModal);
+
+  if (portModal) {
+    portModal.addEventListener('click', (e) => {
+      if (e.target === portModal) closeModal();
+    });
+  }
+
+  if (modalSubmit) {
+    modalSubmit.addEventListener('click', () => {
+      const port = modalPortInput.value.trim() || '8000';
+      localStorage.setItem(PORT_STORAGE_KEY, port);
+      const url = getLocalUrl(port);
+      window.open(url, '_blank');
+      closeModal();
+    });
+  }
+
   if (button && input) {
     const triggerLoad = () => {
-      const value = input.value.trim();
-      if (!value) return;
-      localStorage.setItem(USER_STORAGE_KEY, value);
-      applyProfileLinks(value);
-      loadProjects(value);
+      const user = input.value.trim();
+      if (!user) return;
+      localStorage.setItem(USER_STORAGE_KEY, user);
+      applyProfileLinks(user);
+      loadProjects(user);
     };
 
     button.addEventListener('click', triggerLoad);
     input.addEventListener('keyup', (event) => {
-      if (event.key === 'Enter') {
-        triggerLoad();
-      }
+      if (event.key === 'Enter') triggerLoad();
     });
   }
 }

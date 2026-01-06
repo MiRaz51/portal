@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,6 +11,7 @@
   <link rel="alternate icon" type="image/svg+xml" href="icons/icon-512.svg" />
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
   <div class="page">
     <header class="page-header">
@@ -29,7 +31,7 @@
           <a id="link-github" href="#" target="_blank" rel="noopener noreferrer" class="page-action-link">GitHub</a>
           <a id="link-vercel" href="#" target="_blank" rel="noopener noreferrer" class="page-action-link">Vercel</a>
           <a id="link-zeabur" href="#" target="_blank" rel="noopener noreferrer" class="page-action-link">Zeabur</a>
-          <a id="link-local" href="#" target="_blank" rel="noopener noreferrer" class="page-action-link">Local</a>
+          <a id="link-local" href="#" class="page-action-link">Local</a>
         </nav>
       </div>
     </header>
@@ -39,6 +41,35 @@
     </main>
   </div>
 
+  <div id="port-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <svg class="modal-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" />
+            <rect x="2" y="14" width="20" height="8" rx="2" />
+            <line x1="6" y1="6" x2="6" y2="6" />
+            <line x1="6" y1="18" x2="6" y2="18" />
+          </svg>
+          <h2>Servidor Local</h2>
+        </div>
+        <button id="modal-close" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Selecciona el puerto del servidor local al que deseas acceder:</p>
+        <div class="port-input-group">
+          <label for="modal-port-input">Puerto</label>
+          <input id="modal-port-input" type="number" value="8000" min="1" max="65535" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-cancel" class="button secondary">Cancelar</button>
+        <button id="modal-submit" class="button">Abrir Servidor</button>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
+
 </html>
