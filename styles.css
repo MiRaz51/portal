@@ -471,14 +471,6 @@ body {
   transform: translateY(-2px);
 }
 
-.modal-footer #modal-submit:disabled {
-  background: #e2e8f0;
-  color: #94a3b8;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;

@@ -202,34 +202,17 @@ function initUserControl() {
     if (!statusBadge) return;
     statusBadge.className = 'status-badge checking';
     statusBadge.textContent = 'Verificando...';
-    if (modalSubmit) modalSubmit.disabled = true;
-    const url = getLocalUrl(host, port);
-
     try {
+      const url = getLocalUrl(host, port);
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // Aumentar a 3s
-
-      await fetch(url, {
-        mode: 'no-cors',
-        signal: controller.signal,
-        cache: 'no-cache'
-      });
-
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      await fetch(url, { mode: 'no-cors', signal: controller.signal });
       clearTimeout(timeoutId);
       statusBadge.className = 'status-badge online';
       statusBadge.textContent = 'Servidor activo';
-      if (modalSubmit) modalSubmit.disabled = false;
     } catch (e) {
-      if (window.location.protocol === 'file:') {
-        statusBadge.className = 'status-badge offline';
-        statusBadge.textContent = 'Incierto (Protocolo file://)';
-        // En file:// permitimos el botón ya que el check suele ser bloqueado por seguridad
-        if (modalSubmit) modalSubmit.disabled = false;
-      } else {
-        statusBadge.className = 'status-badge offline';
-        statusBadge.textContent = 'Servidor no detectado';
-        if (modalSubmit) modalSubmit.disabled = true;
-      }
+      statusBadge.className = 'status-badge offline';
+      statusBadge.textContent = 'Servidor no detectado';
     }
   }
 
@@ -279,18 +262,6 @@ function initUserControl() {
 
   if (modalHostInput) modalHostInput.addEventListener('input', onInputChange);
   if (modalPortInput) modalPortInput.addEventListener('input', onInputChange);
-
-  // Manual bypass for status badge
-  if (statusBadge) {
-    statusBadge.style.cursor = 'pointer';
-    statusBadge.title = 'Clic para forzar activación si el servidor está encendido';
-    statusBadge.addEventListener('click', () => {
-      statusBadge.className = 'status-badge online';
-      statusBadge.textContent = 'Activado manualmente';
-      if (modalSubmit) modalSubmit.disabled = false;
-      if (statusInterval) clearInterval(statusInterval);
-    });
-  }
 
   if (linkLocal) {
     linkLocal.addEventListener('click', (e) => {
