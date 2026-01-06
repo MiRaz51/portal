@@ -1,9 +1,9 @@
 const USER_STORAGE_KEY = 'github_user';
 const USAGE_STORAGE_KEY = 'project_usage';
 const PORT_STORAGE_KEY = 'local_port';
+const HOST_STORAGE_KEY = 'local_host';
 
 function getUsageMap() {
-  // ... (rest of the functions remain same until initUserControl)
   try {
     const raw = localStorage.getItem(USAGE_STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
@@ -174,31 +174,36 @@ function initUserControl() {
 
   // Modal elements
   const portModal = document.getElementById('port-modal');
+  const modalHostInput = document.getElementById('modal-host-input');
   const modalPortInput = document.getElementById('modal-port-input');
   const modalClose = document.getElementById('modal-close');
   const modalCancel = document.getElementById('modal-cancel');
   const modalSubmit = document.getElementById('modal-submit');
 
-  const savedUser = localStorage.getItem(USER_STORAGE_KEY) || 'MiRaz51';
-  const savedPort = localStorage.getItem(PORT_STORAGE_KEY) || '8000';
-
-  if (input) input.value = savedUser;
-  if (modalPortInput) modalPortInput.value = savedPort;
-
-  const isMobile = () => {
+  function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  };
+  }
 
-  const getLocalUrl = (port) => {
-    const host = isMobile() ? window.location.hostname : 'localhost';
-    return `http://${host}:${port}/`;
-  };
+  function getLocalUrl(host, port) {
+    const finalHost = host || (isMobile() ? window.location.hostname : 'localhost');
+    return `http://${finalHost}:${port}/`;
+  }
 
-  const applyProfileLinks = (user) => {
+  function applyProfileLinks(user) {
     if (linkGithub) linkGithub.href = `https://github.com/${user}`;
     if (linkVercel) linkVercel.href = 'https://vercel.com';
     if (linkZeabur) linkZeabur.href = 'https://zeabur.com';
-  };
+  }
+
+  const savedUser = localStorage.getItem(USER_STORAGE_KEY) || 'MiRaz51';
+  const savedPort = localStorage.getItem(PORT_STORAGE_KEY) || '8000';
+
+  const defaultHost = isMobile() ? (window.location.hostname !== 'localhost' ? window.location.hostname : '') : 'localhost';
+  const savedHost = localStorage.getItem(HOST_STORAGE_KEY) || defaultHost;
+
+  if (input) input.value = savedUser;
+  if (modalPortInput) modalPortInput.value = savedPort;
+  if (modalHostInput) modalHostInput.value = savedHost;
 
   applyProfileLinks(savedUser);
   loadProjects(savedUser);
@@ -230,9 +235,13 @@ function initUserControl() {
 
   if (modalSubmit) {
     modalSubmit.addEventListener('click', () => {
+      const host = modalHostInput.value.trim();
       const port = modalPortInput.value.trim() || '8000';
+
+      localStorage.setItem(HOST_STORAGE_KEY, host);
       localStorage.setItem(PORT_STORAGE_KEY, port);
-      const url = getLocalUrl(port);
+
+      const url = getLocalUrl(host, port);
       window.open(url, '_blank');
       closeModal();
     });
