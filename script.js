@@ -202,6 +202,7 @@ function initUserControl() {
     if (!statusBadge) return;
     statusBadge.className = 'status-badge checking';
     statusBadge.textContent = 'Verificando...';
+    if (modalSubmit) modalSubmit.disabled = true;
     try {
       const url = getLocalUrl(host, port);
       const controller = new AbortController();
@@ -210,9 +211,11 @@ function initUserControl() {
       clearTimeout(timeoutId);
       statusBadge.className = 'status-badge online';
       statusBadge.textContent = 'Servidor activo';
+      if (modalSubmit) modalSubmit.disabled = false;
     } catch (e) {
       statusBadge.className = 'status-badge offline';
       statusBadge.textContent = 'Servidor no detectado';
+      if (modalSubmit) modalSubmit.disabled = true;
     }
   }
 
