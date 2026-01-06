@@ -179,6 +179,9 @@ function initUserControl() {
   const modalClose = document.getElementById('modal-close');
   const modalCancel = document.getElementById('modal-cancel');
   const modalSubmit = document.getElementById('modal-submit');
+  const statusBadge = document.getElementById('server-status');
+
+  let statusInterval = null;
 
   function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -195,6 +198,25 @@ function initUserControl() {
     if (linkZeabur) linkZeabur.href = 'https://zeabur.com';
   }
 
+  async function checkServerStatus(host, port) {
+    if (!statusBadge) return;
+    statusBadge.className = 'status-badge checking';
+    statusBadge.textContent = 'Verificando...';
+    try {
+      const url = getLocalUrl(host, port);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      await fetch(url, { mode: 'no-cors', signal: controller.signal });
+      clearTimeout(timeoutId);
+      statusBadge.className = 'status-badge online';
+      statusBadge.textContent = 'Servidor activo';
+    } catch (e) {
+      statusBadge.className = 'status-badge offline';
+      statusBadge.textContent = 'Servidor no detectado';
+    }
+  }
+
+
   const savedUser = localStorage.getItem(USER_STORAGE_KEY) || 'MiRaz51';
   const savedPort = localStorage.getItem(PORT_STORAGE_KEY) || '8000';
 
@@ -210,12 +232,36 @@ function initUserControl() {
 
   // Modal logic
   const openModal = () => {
-    if (portModal) portModal.style.display = 'flex';
+    if (portModal) {
+      portModal.style.display = 'flex';
+      const host = modalHostInput.value.trim();
+      const port = modalPortInput.value.trim();
+      checkServerStatus(host, port);
+      if (statusInterval) clearInterval(statusInterval);
+      statusInterval = setInterval(() => {
+        checkServerStatus(modalHostInput.value.trim(), modalPortInput.value.trim());
+      }, 5000);
+    }
   };
 
   const closeModal = () => {
-    if (portModal) portModal.style.display = 'none';
+    if (portModal) {
+      portModal.style.display = 'none';
+      if (statusInterval) {
+        clearInterval(statusInterval);
+        statusInterval = null;
+      }
+    }
   };
+
+  const onInputChange = () => {
+    const host = modalHostInput.value.trim();
+    const port = modalPortInput.value.trim();
+    checkServerStatus(host, port);
+  };
+
+  if (modalHostInput) modalHostInput.addEventListener('input', onInputChange);
+  if (modalPortInput) modalPortInput.addEventListener('input', onInputChange);
 
   if (linkLocal) {
     linkLocal.addEventListener('click', (e) => {
